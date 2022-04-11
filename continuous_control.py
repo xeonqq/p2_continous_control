@@ -56,7 +56,7 @@ class Environment(object):
             state = get_next_state(env_info)
             score = 0
             for j in range(steps_per_episode):
-                action = self._agent.act(state, 0.01)
+                action = self._agent.act(state, False)
                 env_info = self._env.step(action)[self._brain_name]  # send the action to the environment
                 next_state, reward, done = get_env_step_results(env_info)
                 score += reward  # update the score
@@ -69,7 +69,7 @@ class Environment(object):
     def close(self):
         self._env.close()
 
-    def train(self, min_score, n_episodes=100, max_t=1000):
+    def train(self, min_score, n_episodes=200, max_t=1000):
         """Deep Q-Learning.
             Params
             ======
@@ -84,10 +84,11 @@ class Environment(object):
 
         for i_episode in range(1, n_episodes + 1):
             env_info = self._env.reset(train_mode=True)[self._brain_name]
+            self._agent.reset()
             state = get_next_state(env_info)
             score = 0
             for t in range(max_t):
-                action = self._agent.act(state)
+                action = self._agent.act(state, False)
                 env_info = self._env.step(action)[self._brain_name]  # send the action to the environment
                 next_state, reward, done = get_env_step_results(env_info)
                 self._agent.step(state, action, reward, next_state, done)

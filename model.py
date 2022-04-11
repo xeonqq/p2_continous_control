@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import tensor
-from device import device
 
+from device import device
 
 
 def layer_init(layer, w_scale=1.0):
@@ -54,12 +53,14 @@ class CriticNet(nn.Module):
     def __init__(self,
                  action_dim,
                  phi_body,
+                 critic_body,
                  ):
         super(CriticNet, self).__init__()
         self.phi_body = phi_body
-        self.fc_critic = layer_init(nn.Linear(phi_body.feature_dim + action_dim, 1), 1e-3)
+        self.critic_body = critic_body
+        self.fc_critic = layer_init(nn.Linear(critic_body.feature_dim, 1), 1e-3)
 
-        self.critic_params = list(self.fc_critic.parameters())
+        self.critic_params = list(self.critic_body.parameters()) + list(self.fc_critic.parameters())
         self.phi_params = list(self.phi_body.parameters())
 
         self.to(device)
@@ -67,5 +68,6 @@ class CriticNet(nn.Module):
     def forward(self, obs, action):
         phi = self.phi_body(obs)
         xs = torch.cat((phi, action), dim=1)
+        xs = self.critic_body(xs)
         value = self.fc_critic(xs)
         return value
