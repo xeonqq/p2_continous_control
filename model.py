@@ -1,14 +1,18 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 from device import device
 
 
-def layer_init(layer, w_scale=1.0):
-    nn.init.orthogonal_(layer.weight.data)
-    layer.weight.data.mul_(w_scale)
-    nn.init.constant_(layer.bias.data, 0)
+def layer_init(layer, bound=None):
+    # nn.init.orthogonal_(layer.weight.data)
+    # layer.weight.data.mul_(w_scale)
+    if bound is None:
+        bound = 1/np.sqrt(layer.in_features)
+    nn.init.uniform_(layer.bias.data, -bound, bound)
+    nn.init.uniform_(layer.weight.data, -bound, bound)
     return layer
 
 
@@ -35,7 +39,7 @@ class ActorNet(nn.Module):
                  ):
         super(ActorNet, self).__init__()
         self.phi_body = phi_body
-        self.fc_action = layer_init(nn.Linear(phi_body.feature_dim, action_dim), 1e-3)
+        self.fc_action = layer_init(nn.Linear(phi_body.feature_dim, action_dim), 3e-3)
 
         self.actor_params = list(self.fc_action.parameters())
         self.phi_params = list(self.phi_body.parameters())
@@ -58,7 +62,7 @@ class CriticNet(nn.Module):
         super(CriticNet, self).__init__()
         self.phi_body = phi_body
         self.critic_body = critic_body
-        self.fc_critic = layer_init(nn.Linear(critic_body.feature_dim, 1), 1e-3)
+        self.fc_critic = layer_init(nn.Linear(critic_body.feature_dim, 1), 3e-4)
 
         self.critic_params = list(self.critic_body.parameters()) + list(self.fc_critic.parameters())
         self.phi_params = list(self.phi_body.parameters())

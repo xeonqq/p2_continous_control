@@ -8,14 +8,19 @@ from model import ActorNet, CriticNet, FCBody
 from ou_noise import OUNoise
 from replay_buffer import ReplayBuffer
 
-BUFFER_SIZE = int(1e5)  # replay buffer size
-BATCH_SIZE = 128  # minibatch size
+BUFFER_SIZE = int(1e6)  # replay buffer size
+BATCH_SIZE = 64  # minibatch size
 GAMMA = 0.99  # discount factor
 TAU = 1e-3  # for soft update of target parameters
 LR_ACTOR = 1e-4  # learning rate of the actor
 LR_CRITIC = 1e-3  # learning rate of the critic
 WEIGHT_DECAY = 1e-2  # L2 weight decay
 
+def print_nn_parameters(model):
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            if name == "phi_body.layers.0.weight":
+                print(name, param.data[0])
 
 class DDPG_Agent(object):
     def __init__(self, state_dim, action_dim, seed=42):
@@ -30,9 +35,10 @@ class DDPG_Agent(object):
         self._replay_buffer = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, seed)
         self._ou_noise = OUNoise(action_dim, seed)
         self._noise_decay = 0.99
-        
+
         self.soft_update(self._actor_local, self._actor_target, 1)
         self.soft_update(self._critic_local, self._critic_target, 1)
+
 
     def load_actor_model(self, model):
         self._actor_target.load_state_dict(torch.load(model))
@@ -43,6 +49,7 @@ class DDPG_Agent(object):
         if len(self._replay_buffer) > BATCH_SIZE:
             experiences = self._replay_buffer.sample()
             self.learn(experiences)
+            # print_nn_parameters(self._critic_local)
 
     def reset(self):
         self._ou_noise.reset()
@@ -56,6 +63,7 @@ class DDPG_Agent(object):
         expected_return = self._critic_local(states, actions)
 
         critic_loss = F.mse_loss(target_return, expected_return)
+        # print(critic_loss)
         self._critic_optimizer.zero_grad()
         critic_loss.backward()
         self._critic_optimizer.step()
@@ -64,6 +72,7 @@ class DDPG_Agent(object):
         # self._critic_local.eval()
         # with torch.no_grad():
         actor_loss = -self._critic_local(states, expected_action).mean()
+        # print(actor_loss)
         # self._critic_local.train()
 
         self._actor_optimizer.zero_grad()

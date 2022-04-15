@@ -80,7 +80,10 @@ class Environment(object):
                 eps_decay (float): multiplicative factor (per episode) for decreasing epsilon
             """
         scores = []  # list containing scores from each episode
-        scores_window = deque(maxlen=100)  # last 100 scores
+        scores_window = deque(maxlen=10)  # last 10 scores
+        use_ou_noise = False
+
+        print("use_ou_noise:", use_ou_noise)
 
         for i_episode in range(1, n_episodes + 1):
             env_info = self._env.reset(train_mode=True)[self._brain_name]
@@ -88,7 +91,7 @@ class Environment(object):
             state = get_next_state(env_info)
             score = 0
             for t in range(max_t):
-                action = self._agent.act(state, False)
+                action = self._agent.act(state, use_ou_noise)
                 env_info = self._env.step(action)[self._brain_name]  # send the action to the environment
                 next_state, reward, done = get_env_step_results(env_info)
                 self._agent.step(state, action, reward, next_state, done)
@@ -120,8 +123,8 @@ def plot_scores(scores):
     plt.show()
 
 
-def train(min_score):
-    env = Environment(UnityEnvironment(file_name='Reacher_Linux_one_agent/Reacher.x86_64'))
+def train(min_score, unity_env_file='Reacher_Linux_one_agent/Reacher.x86_64'):
+    env = Environment(UnityEnvironment(file_name=unity_env_file))
     scores = env.train(min_score)
     plot_scores(scores)
     env.close()
