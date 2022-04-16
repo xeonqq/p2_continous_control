@@ -17,13 +17,6 @@ LR_CRITIC = 5.e-3  # learning rate of the critic
 WEIGHT_DECAY = 0  # L2 weight decay
 
 
-def print_nn_parameters(model):
-    for name, param in model.named_parameters():
-        if param.requires_grad:
-            if name == "phi_body.layers.0.weight":
-                print(name, param.data[0])
-
-
 class DDPG_Agent(object):
     def __init__(self, state_dim, action_dim, seed=101, update_interval=1, n_updates=1):
         print("Using device: ", device)
@@ -74,7 +67,6 @@ class DDPG_Agent(object):
             #     for _ in range(self._n_updates):
             experiences = self._replay_buffer.sample()
             self.learn(experiences)
-            # print_nn_parameters(self._critic_local)
 
     def step_without_buffer(self, states, actions, rewards, next_states, dones):
         states = torch.from_numpy(states).float().to(device)

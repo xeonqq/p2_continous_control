@@ -88,7 +88,7 @@ class Environment(object):
                 eps_decay (float): multiplicative factor (per episode) for decreasing epsilon
             """
         scores = []  # list containing scores from each episode
-        scores_window = deque(maxlen=10)  # last 10 scores
+        scores_window = deque(maxlen=100)  # last 100 scores
         use_ou_noise = True
 
         lr_decay = 0.98
@@ -119,11 +119,12 @@ class Environment(object):
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_window)), end="")
             if i_episode % 100 == 0:
                 print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_window)))
-            if np.mean(scores_window) >= min_score:
-                print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode - 100,
+            if i_episode > 100 and np.mean(scores_window) >= min_score:
+                print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode,
                                                                                              np.mean(scores_window)))
                 torch.save(self._agent._actor_target.state_dict(), 'actor.pth')
                 break
+
         return scores
 
 

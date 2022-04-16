@@ -54,7 +54,6 @@ class ActorNet(nn.Module):
         phi = self.phi_body(obs)
 
         action = self.fc_action(phi)
-        # to do add OU noise to action
         return torch.tanh(action)
 
 
