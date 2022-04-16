@@ -60,11 +60,24 @@ The environment is considered solved, when the average (over 100 episodes) of th
 
     (_For AWS_) If you'd like to train the agent on AWS (and have not [enabled a virtual screen](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-on-Amazon-Web-Service.md)), then please use [this link](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/one_agent/Reacher_Linux_NoVis.zip) (version 1) or [this link](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Linux_NoVis.zip) (version 2) to obtain the "headless" version of the environment.  You will **not** be able to watch the agent without enabling a virtual screen, but you will be able to train the agent.  (_To watch the agent, you should follow the instructions to [enable a virtual screen](https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-on-Amazon-Web-Service.md), and then download the environment for the **Linux** operating system above._)
 
-2. Place the file in the DRLND GitHub repository, in the `p2_continuous-control/` folder, and unzip (or decompress) the file. 
+2. Place the file in the DRLND GitHub repository, in the `p2_continuous-control/` folder, and unzip (or decompress) the file.
+3. Install dependencies with
+```bash
+ pip3 install -r python/requirements.txt
+```
 
-### Instructions
 
-Follow the instructions in `Continuous_Control.ipynb` to get started with training your own agent!  
+### Running the training
+```bash
+python3 continuous_control.py
+```
+Unity Gui will pop up and demonstate the learning process, a checkpoint file will be generated at the end of the training
+
+### Running the model
+A pre-trained model checkpoint file is provided to run the agent, simply run:
+```bash
+python3 run_model.py
+```
 
 ### (Optional) Challenge: Crawler Environment
 
