@@ -64,7 +64,7 @@ class DDPG_Agent(object):
         return self._actor_optimizer
 
     def load_actor_model(self, model):
-        self._actor_target.load_state_dict(torch.load(model))
+        self._actor_local.load_state_dict(torch.load(model))
 
     def step_with_replay_buffer(self, states, actions, rewards, next_states, dones):
         self._replay_buffer.add(states, actions, rewards, next_states, dones)

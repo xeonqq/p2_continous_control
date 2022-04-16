@@ -54,23 +54,25 @@ class Environment(object):
         print('States have length:', self._state_size)
         self._agent = DDPG_Agent(self._state_size, self._action_size)
 
-    def run_model(self, actor_model, num_episode=3, steps_per_episode=300):
-        self._agent.load_model(torch.load(actor_model))
-
+    def run_model(self, actor_model, num_episode=3, steps_per_episode=1000):
+        self._agent.load_actor_model(actor_model)
+        scores = []
         for i in range(num_episode):
-            env_info = self._env.reset(train_mode=True)[self._brain_name]
-            state = get_next_states(env_info)
+            env_info = self._env.reset(train_mode=False)[self._brain_name]
+            states = get_next_states(env_info)
             score = 0
             for j in range(steps_per_episode):
-                action = self._agent.act(state, False)
-                env_info = self._env.step(action)[self._brain_name]  # send the action to the environment
+                actions = self._agent.act(states, False, i)
+                env_info = self._env.step(actions)[self._brain_name]  # send the action to the environment
                 next_states, rewards, dones = get_env_step_results(env_info)
-                score += rewards  # update the score
-                state = next_states  # roll over the state to next time step
-                time.sleep(1 / 30.0)
-                if dones:
-                    print("Episode: {}, score: {}".format(i, score))
+                score += np.mean(rewards)  # update the score
+                states = next_states  # roll over the state to next time step
+                if dones.any():
                     break
+            scores.append(score)  # save most recent score
+            print("Episode: {}, score: {}".format(i, score))
+        return scores
+
 
     def close(self):
         self._env.close()
