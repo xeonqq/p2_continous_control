@@ -17,8 +17,9 @@ def layer_init(layer, bound=None):
 
 
 class FCBody(nn.Module):
-    def __init__(self, state_dim, hidden_units=(64, 64), gate=F.relu):
+    def __init__(self, state_dim, hidden_units=(64, 64), seed=0, gate=F.relu):
         super(FCBody, self).__init__()
+        self.seed = torch.manual_seed(seed)
         dims = (state_dim,) + hidden_units
         self.layers = nn.ModuleList(
             [layer_init(nn.Linear(dim_in, dim_out)) for dim_in, dim_out in zip(dims[:-1], dims[1:])])
@@ -36,8 +37,11 @@ class ActorNet(nn.Module):
     def __init__(self,
                  action_dim,
                  phi_body,
+                 seed
                  ):
         super(ActorNet, self).__init__()
+        self.seed = torch.manual_seed(seed)
+
         self.phi_body = phi_body
         self.fc_action = layer_init(nn.Linear(phi_body.feature_dim, action_dim), 3e-3)
 
@@ -55,11 +59,12 @@ class ActorNet(nn.Module):
 
 class CriticNet(nn.Module):
     def __init__(self,
-                 action_dim,
                  phi_body,
                  critic_body,
+                 seed,
                  ):
         super(CriticNet, self).__init__()
+        self.seed = torch.manual_seed(seed)
         self.phi_body = phi_body
         self.critic_body = critic_body
         self.fc_critic = layer_init(nn.Linear(critic_body.feature_dim, 1), 3e-4)

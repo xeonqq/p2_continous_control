@@ -21,10 +21,11 @@ class ReplayBuffer:
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
         self.seed = random.seed(seed)
 
-    def add(self, state, action, reward, next_state, done):
+    def add(self, states, actions, rewards, next_states, dones):
         """Add a new experience to memory."""
-        e = self.experience(state, action, reward, next_state, done)
-        self.memory.append(e)
+        for state, action, reward, next_state, done in zip(states, actions, rewards, next_states, dones):
+            e = self.experience(state, action, reward, next_state, done)
+            self.memory.append(e)
 
     def sample(self):
         """Randomly sample a batch of experiences from memory."""

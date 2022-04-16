@@ -5,26 +5,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from unityagents import UnityEnvironment
+
 from ddpg_agent import DDPG_Agent
 
 
-def get_next_state(env_info):
-    next_state = env_info.vector_observations[0]  # get the next state
+def get_next_states(env_info):
+    next_state = env_info.vector_observations  # get the next state
     return next_state
 
 
-def get_reward(env_info):
-    reward = env_info.rewards[0]  # get the reward
-    return reward
+def get_rewards(env_info):
+    rewards = env_info.rewards  # get the reward
+    rewards = np.asarray(rewards)
+    rewards = rewards[..., np.newaxis]
+    return rewards
 
 
-def get_done(env_info):
-    done = env_info.local_done[0]  # see if episode has finished
-    return done
+def get_dones(env_info):
+    dones = env_info.local_done  # see if episode has finished
+    dones = np.asarray(dones)
+    dones = dones[..., np.newaxis]
+    return dones
 
 
 def get_env_step_results(env_info):
-    return get_next_state(env_info), get_reward(env_info), get_done(env_info)
+    return get_next_states(env_info), get_rewards(env_info), get_dones(env_info)
 
 
 class Environment(object):
@@ -53,16 +58,16 @@ class Environment(object):
 
         for i in range(num_episode):
             env_info = self._env.reset(train_mode=True)[self._brain_name]
-            state = get_next_state(env_info)
+            state = get_next_states(env_info)
             score = 0
             for j in range(steps_per_episode):
                 action = self._agent.act(state, False)
                 env_info = self._env.step(action)[self._brain_name]  # send the action to the environment
-                next_state, reward, done = get_env_step_results(env_info)
-                score += reward  # update the score
-                state = next_state  # roll over the state to next time step
+                next_states, rewards, dones = get_env_step_results(env_info)
+                score += rewards  # update the score
+                state = next_states  # roll over the state to next time step
                 time.sleep(1 / 30.0)
-                if done:
+                if dones:
                     print("Episode: {}, score: {}".format(i, score))
                     break
 
@@ -81,23 +86,23 @@ class Environment(object):
             """
         scores = []  # list containing scores from each episode
         scores_window = deque(maxlen=10)  # last 10 scores
-        use_ou_noise = False
+        use_ou_noise = True
 
-        print("use_ou_noise:", use_ou_noise)
+        print("use_noise:", use_ou_noise)
 
         for i_episode in range(1, n_episodes + 1):
             env_info = self._env.reset(train_mode=True)[self._brain_name]
             self._agent.reset()
-            state = get_next_state(env_info)
+            states = get_next_states(env_info)
             score = 0
             for t in range(max_t):
-                action = self._agent.act(state, use_ou_noise)
+                action = self._agent.act(states, use_ou_noise, i_episode)
                 env_info = self._env.step(action)[self._brain_name]  # send the action to the environment
-                next_state, reward, done = get_env_step_results(env_info)
-                self._agent.step(state, action, reward, next_state, done)
-                score += reward  # update the score
-                state = next_state  # roll over the state to next time step
-                if done:
+                next_states, rewards, dones = get_env_step_results(env_info)
+                self._agent.step(states, action, rewards, next_states, dones)
+                score += np.mean(rewards)  # update the score
+                states = next_states  # roll over the state to next time step
+                if dones.any():
                     break
             scores_window.append(score)  # save most recent score
             scores.append(score)  # save most recent score
@@ -123,7 +128,7 @@ def plot_scores(scores):
     plt.show()
 
 
-def train(min_score, unity_env_file='Reacher_Linux_one_agent/Reacher.x86_64'):
+def train(min_score, unity_env_file='Reacher_Linux_20_agents/Reacher.x86_64'):
     env = Environment(UnityEnvironment(file_name=unity_env_file))
     scores = env.train(min_score)
     plot_scores(scores)
