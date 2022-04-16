@@ -74,7 +74,7 @@ class Environment(object):
     def close(self):
         self._env.close()
 
-    def train(self, min_score, n_episodes=200, max_t=1000):
+    def train(self, min_score, n_episodes=150, max_t=1000):
         """Deep Q-Learning.
             Params
             ======

@@ -52,6 +52,7 @@ class ActorNet(nn.Module):
 
     def forward(self, obs):
         phi = self.phi_body(obs)
+
         action = self.fc_action(phi)
         # to do add OU noise to action
         return torch.tanh(action)
@@ -75,8 +76,8 @@ class CriticNet(nn.Module):
         self.to(device)
 
     def forward(self, obs, action):
-        phi = self.phi_body(obs)
-        xs = torch.cat((phi, action), dim=1)
+        xs = torch.cat((obs, action), dim=1)
+        xs = self.phi_body(xs)
         xs = self.critic_body(xs)
         value = self.fc_critic(xs)
         return value
