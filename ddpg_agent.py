@@ -12,8 +12,8 @@ BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 64  # minibatch size
 GAMMA = 0.99  # discount factor
 TAU = 1e-3  # for soft update of target parameters
-LR_ACTOR = 1.e-5  # learning rate of the actor
-LR_CRITIC = 1.e-4  # learning rate of the critic
+LR_ACTOR = 5.e-4  # learning rate of the actor
+LR_CRITIC = 5.e-3  # learning rate of the critic
 WEIGHT_DECAY = 0  # L2 weight decay
 
 
@@ -31,14 +31,16 @@ class DDPG_Agent(object):
         # self._actor_target = ActorNet(state_dim, action_dim, seed).to(device)
         self.seed = seed
         np.random.seed(seed)
-        self._actor_local = ActorNet(action_dim, FCBody(state_dim, (128, 256, 128), seed), seed)
-        self._actor_target = ActorNet(action_dim, FCBody(state_dim, (128, 256, 128), seed), seed)
+        self._actor_local = ActorNet(action_dim, FCBody(state_dim, (128, 200, 128), seed), seed)
+        self._actor_target = ActorNet(action_dim, FCBody(state_dim, (128, 200, 128), seed), seed)
         self._actor_optimizer = optim.Adam(self._actor_local.parameters(), lr=LR_ACTOR)
 
         # self._critic_local = CriticNet(state_dim, action_dim, seed).to(device)
         # self._critic_target = CriticNet(state_dim, action_dim, seed).to(device)
-        self._critic_local = CriticNet(FCBody(state_dim+action_dim, (256,512), seed), FCBody(512, (256,), seed), seed)
-        self._critic_target = CriticNet(FCBody(state_dim+action_dim, (256,512), seed), FCBody(512, (256,), seed), seed)
+        self._critic_local = CriticNet(FCBody(state_dim + action_dim, (200, 400), seed), FCBody(400, (200,), seed),
+                                       seed)
+        self._critic_target = CriticNet(FCBody(state_dim + action_dim, (200, 400), seed), FCBody(400, (200,), seed),
+                                        seed)
         self._critic_optimizer = optim.Adam(self._critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
         self._replay_buffer = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, seed)
         self._ou_noise = OUNoise(action_dim, seed)
@@ -54,6 +56,12 @@ class DDPG_Agent(object):
 
         print(self._actor_local)
         print(self._critic_local)
+
+    def get_critic_optimizer(self):
+        return self._critic_optimizer
+
+    def get_actor_optimizer(self):
+        return self._actor_optimizer
 
     def load_actor_model(self, model):
         self._actor_target.load_state_dict(torch.load(model))

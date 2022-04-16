@@ -4,6 +4,7 @@ from collections import deque
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch.optim.lr_scheduler import ExponentialLR
 from unityagents import UnityEnvironment
 
 from ddpg_agent import DDPG_Agent
@@ -88,6 +89,10 @@ class Environment(object):
         scores_window = deque(maxlen=10)  # last 10 scores
         use_ou_noise = True
 
+        lr_decay = 0.98
+        actor_scheduler = ExponentialLR(self._agent.get_actor_optimizer(), gamma=lr_decay)
+        critic_scheduler = ExponentialLR(self._agent.get_critic_optimizer(), gamma=lr_decay)
+
         print("use_noise:", use_ou_noise)
 
         for i_episode in range(1, n_episodes + 1):
@@ -104,6 +109,9 @@ class Environment(object):
                 states = next_states  # roll over the state to next time step
                 if dones.any():
                     break
+            actor_scheduler.step()
+            critic_scheduler.step()
+
             scores_window.append(score)  # save most recent score
             scores.append(score)  # save most recent score
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_window)), end="")
